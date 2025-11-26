@@ -42,6 +42,7 @@ Requirements:
         'security/ir.model.access.csv',
         
         # Data
+        'data/ir_sequence_data.xml',
         'data/system_parameters.xml',
         'data/ir_cron_data.xml',
         'data/email_templates.xml',

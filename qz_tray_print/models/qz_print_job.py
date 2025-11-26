@@ -13,12 +13,12 @@ class QZPrintJob(models.Model):
     _order = 'submitted_date desc, priority desc, id desc'
     _rec_name = 'name'
 
-    # Computed job identifier
+    # Job identifier
     name = fields.Char(
         string='Job Name',
-        compute='_compute_name',
-        store=True,
+        default=lambda self: self._get_default_name(),
         readonly=True,
+        copy=False,
         help='Unique identifier for this print job'
     )
     
@@ -156,16 +156,24 @@ class QZPrintJob(models.Model):
     create_uid = fields.Many2one('res.users', string='Created By', readonly=True)
     write_uid = fields.Many2one('res.users', string='Last Updated By', readonly=True)
 
-    @api.depends('document_type', 'printer_id', 'id')
-    def _compute_name(self):
-        """Compute job name from document type, printer, and ID"""
-        for record in self:
-            if record.id:
+    @api.model
+    def _get_default_name(self):
+        """Generate default job name using sequence"""
+        sequence = self.env['ir.sequence'].next_by_code('qz.print.job') or 'New'
+        return f'PrintJob-{sequence}'
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        """Override create to enhance name with document type and printer"""
+        records = super().create(vals_list)
+        for record in records:
+            if record.name and record.name.startswith('PrintJob-'):
+                # Enhance the name with document type and printer
                 printer_name = record.printer_id.name if record.printer_id else 'Unknown'
                 doc_type = record.document_type or 'Document'
-                record.name = f'{doc_type}-{printer_name}-{record.id}'
-            else:
-                record.name = 'New Print Job'
+                sequence_part = record.name.split('-')[1]
+                record.name = f'{doc_type}-{printer_name}-{sequence_part}'
+        return records
 
     @api.constrains('copies')
     def _check_copies(self):
