@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="qz_tray_print.PrintJobMonitor">
+    <div class="qz-print-monitor">
+        <!-- Header -->
+        <div class="qz-monitor-header">
+            <h3>Print Job Monitor</h3>
+        </div>
+
+        <!-- Filters -->
+        <div class="qz-monitor-filters card mb-3">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Date From</label>
+                        <input 
+                            type="date" 
+                            class="form-control" 
+                            t-model="state.filters.dateFrom"/>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Date To</label>
+                        <input 
+                            type="date" 
+                            class="form-control" 
+                            t-model="state.filters.dateTo"/>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">User</label>
+                        <select class="form-select" t-model="state.filters.user">
+                            <option value="">All Users</option>
+                            <t t-foreach="state.users" t-as="user" t-key="user.id">
+                                <option t-att-value="user.id" t-esc="user.name"/>
+                            </t>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Printer</label>
+                        <select class="form-select" t-model="state.filters.printer">
+                            <option value="">All Printers</option>
+                            <t t-foreach="state.printers" t-as="printer" t-key="printer.id">
+                                <option t-att-value="printer.id" t-esc="printer.name"/>
+                            </t>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" t-model="state.filters.status">
+                            <option value="">All Statuses</option>
+                            <option value="draft">Draft</option>
+                            <option value="queued">Queued</option>
+                            <option value="printing">Printing</option>
+                            <option value="completed">Completed</option>
+                            <option value="failed">Failed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <button class="btn btn-primary me-2" t-on-click="applyFilters">
+                            <i class="fa fa-filter"/> Apply Filters
+                        </button>
+                        <button class="btn btn-secondary" t-on-click="clearFilters">
+                            <i class="fa fa-times"/> Clear Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Job List -->
+        <div class="qz-monitor-jobs card">
+            <div class="card-body">
+                <t t-if="state.loading">
+                    <div class="d-flex justify-content-center p-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading jobs...</span>
+                        </div>
+                    </div>
+                </t>
+                
+                <t t-elif="state.jobs.length === 0">
+                    <div class="alert alert-info">
+                        <i class="fa fa-info-circle"/> No print jobs found
+                    </div>
+                </t>
+                
+                <t t-else="">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Job ID</th>
+                                    <th>Document Type</th>
+                                    <th>Printer</th>
+                                    <th>User</th>
+                                    <th>Status</th>
+                                    <th>Submitted</th>
+                                    <th>Completed</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="state.jobs" t-as="job" t-key="job.id">
+                                    <tr>
+                                        <td>
+                                            <strong>#<t t-esc="job.id"/></strong>
+                                        </td>
+                                        <td t-esc="job.document_type"/>
+                                        <td>
+                                            <t t-if="job.printer_id">
+                                                <span t-esc="job.printer_id[1]"/>
+                                            </t>
+                                            <t t-else="">-</t>
+                                        </td>
+                                        <td>
+                                            <t t-if="job.user_id">
+                                                <span t-esc="job.user_id[1]"/>
+                                            </t>
+                                            <t t-else="">-</t>
+                                        </td>
+                                        <td>
+                                            <span 
+                                                class="badge"
+                                                t-att-class="getStateBadgeClass(job.state)"
+                                                t-esc="job.state"/>
+                                        </td>
+                                        <td t-esc="formatDate(job.submitted_date)"/>
+                                        <td t-esc="formatDate(job.completed_date)"/>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <t t-if="job.state === 'failed'">
+                                                    <button 
+                                                        class="btn btn-outline-primary"
+                                                        t-on-click="() => this.retryJob(job.id)"
+                                                        title="Retry">
+                                                        <i class="fa fa-refresh"/>
+                                                    </button>
+                                                </t>
+                                                <t t-if="job.state === 'queued' or job.state === 'draft'">
+                                                    <button 
+                                                        class="btn btn-outline-danger"
+                                                        t-on-click="() => this.cancelJob(job.id)"
+                                                        title="Cancel">
+                                                        <i class="fa fa-times"/>
+                                                    </button>
+                                                </t>
+                                                <t t-if="job.state === 'completed' or job.state === 'failed' or job.state === 'cancelled'">
+                                                    <button 
+                                                        class="btn btn-outline-secondary"
+                                                        t-on-click="() => this.resubmitJob(job.id)"
+                                                        title="Resubmit">
+                                                        <i class="fa fa-repeat"/>
+                                                    </button>
+                                                </t>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <t t-if="job.error_message and job.state === 'failed'">
+                                        <tr class="table-danger">
+                                            <td colspan="8">
+                                                <small>
+                                                    <strong>Error:</strong> 
+                                                    <span t-esc="job.error_message"/>
+                                                </small>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+            </div>
+        </div>
+    </div>
+</t>
+
+</templates>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Root Menu -->
+        <menuitem id="menu_qz_tray_root"
+                  name="QZ Tray Printing"
+                  sequence="100"/>
+
+        <!-- Configuration Menu -->
+        <menuitem id="menu_qz_tray_config"
+                  name="Configuration"
+                  parent="menu_qz_tray_root"
+                  sequence="10"/>
+
+        <!-- Printers Menu -->
+        <menuitem id="menu_qz_printers"
+                  name="Printers"
+                  parent="menu_qz_tray_root"
+                  action="action_qz_printer"
+                  sequence="20"/>
+
+        <!-- Print Queue Menu -->
+        <menuitem id="menu_qz_print_queue"
+                  name="Print Queue"
+                  parent="menu_qz_tray_root"
+                  action="action_qz_print_queue"
+                  sequence="25"/>
+
+        <!-- Print Jobs Menu -->
+        <menuitem id="menu_qz_print_jobs"
+                  name="Print Jobs"
+                  parent="menu_qz_tray_root"
+                  action="action_qz_print_job"
+                  sequence="30"/>
+
+        <!-- Print Templates Menu -->
+        <menuitem id="menu_qz_print_templates"
+                  name="Print Templates"
+                  parent="menu_qz_tray_config"
+                  action="action_qz_print_template"
+                  sequence="20"/>
+
+        <!-- QZ Tray Configuration Menu -->
+        <menuitem id="menu_qz_tray_settings"
+                  name="QZ Tray Settings"
+                  parent="menu_qz_tray_config"
+                  action="action_qz_tray_config"
+                  sequence="10"/>
+
+        <!-- Template Scan Action Menu -->
+        <menuitem id="menu_scan_templates"
+                  name="Scan Templates"
+                  parent="menu_qz_tray_config"
+                  action="action_scan_print_templates"
+                  sequence="30"/>
+
+        <!-- Template Update Check Menu -->
+        <menuitem id="menu_check_template_updates"
+                  name="Check Template Updates"
+                  parent="menu_qz_tray_config"
+                  action="action_check_template_updates"
+                  sequence="40"/>
+    </data>
+</odoo>

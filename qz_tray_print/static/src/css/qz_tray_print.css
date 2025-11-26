@@ -1,0 +1,90 @@
+/* QZ Tray Print Integration Styles */
+
+/* Printer Selector Dialog */
+.qz-printer-selector {
+    min-height: 200px;
+    max-height: 400px;
+}
+
+.qz-printer-list {
+    overflow-y: auto;
+    max-height: 350px;
+}
+
+.qz-printer-list .list-group-item {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.qz-printer-list .list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+.qz-printer-list .list-group-item.active {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.qz-printer-list .list-group-item.active .text-muted {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Print Preview Dialog */
+.qz-print-preview-dialog .modal-body {
+    padding: 0;
+}
+
+.qz-print-preview {
+    min-height: 500px;
+    max-height: 70vh;
+    overflow: auto;
+}
+
+.qz-preview-container {
+    width: 100%;
+    min-height: 500px;
+    background-color: #f5f5f5;
+    padding: 20px;
+}
+
+.qz-preview-container embed,
+.qz-preview-container iframe {
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Print Job Monitor */
+.qz-print-monitor {
+    padding: 20px;
+}
+
+.qz-monitor-header {
+    margin-bottom: 20px;
+}
+
+.qz-monitor-header h3 {
+    margin: 0;
+    color: #333;
+}
+
+.qz-monitor-filters {
+    background-color: #f8f9fa;
+}
+
+.qz-monitor-jobs .table {
+    margin-bottom: 0;
+}
+
+.qz-monitor-jobs .table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.qz-monitor-jobs .table td {
+    vertical-align: middle;
+}
+
+.qz-monitor-jobs .btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+}

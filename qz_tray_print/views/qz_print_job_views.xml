@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Print Job Tree View -->
+        <record id="view_qz_print_job_tree" model="ir.ui.view">
+            <field name="name">qz.print.job.tree</field>
+            <field name="model">qz.print.job</field>
+            <field name="arch" type="xml">
+                <list string="Print Jobs">
+                    <field name="name"/>
+                    <field name="document_type"/>
+                    <field name="printer_id"/>
+                    <field name="user_id"/>
+                    <field name="state" decoration-info="state == 'queued'" 
+                           decoration-primary="state == 'printing'" 
+                           decoration-success="state == 'completed'" 
+                           decoration-danger="state == 'failed'" 
+                           decoration-muted="state == 'cancelled'"
+                           widget="badge"/>
+                    <field name="submitted_date"/>
+                    <field name="completed_date"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Print Job Form View -->
+        <record id="view_qz_print_job_form" model="ir.ui.view">
+            <field name="name">qz.print.job.form</field>
+            <field name="model">qz.print.job</field>
+            <field name="arch" type="xml">
+                <form string="Print Job">
+                    <header>
+                        <button name="cancel_job" 
+                                type="object" 
+                                string="Cancel" 
+                                class="btn-warning"
+                                icon="fa-times"
+                                invisible="state not in ['draft', 'queued', 'printing']"
+                                help="Cancel this print job"/>
+                        <button name="retry_job" 
+                                type="object" 
+                                string="Retry" 
+                                class="btn-primary"
+                                icon="fa-refresh"
+                                invisible="state != 'failed'"
+                                help="Retry this failed print job"/>
+                        <button name="submit_job" 
+                                type="object" 
+                                string="Resubmit" 
+                                class="btn-primary"
+                                icon="fa-paper-plane"
+                                invisible="state not in ['failed', 'cancelled']"
+                                help="Resubmit this print job"/>
+                        <field name="state" widget="statusbar" 
+                               statusbar_visible="draft,queued,printing,completed"/>
+                    </header>
+                    <sheet>
+                        <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="state != 'cancelled'"/>
+                        
+                        <div class="oe_title">
+                            <label for="name" string="Job Name"/>
+                            <h1>
+                                <field name="name" readonly="1"/>
+                            </h1>
+                        </div>
+
+                        <group>
+                            <group string="Job Information">
+                                <field name="document_type"/>
+                                <field name="printer_id"/>
+                                <field name="user_id"/>
+                                <field name="priority"/>
+                                <field name="copies"/>
+                            </group>
+                            <group string="Timestamps">
+                                <field name="submitted_date" readonly="1"/>
+                                <field name="completed_date" readonly="1"/>
+                                <field name="retry_count" readonly="1"/>
+                            </group>
+                        </group>
+
+                        <group>
+                            <group string="Print Data">
+                                <field name="data_format"/>
+                                <field name="template_id"/>
+                                <field name="parent_model" readonly="1"/>
+                                <field name="parent_id" readonly="1"/>
+                            </group>
+                            <group string="Status &amp; Errors">
+                                <field name="state" readonly="1"/>
+                                <field name="error_message" readonly="1" 
+                                       invisible="not error_message"
+                                       widget="text"/>
+                            </group>
+                        </group>
+
+                        <notebook>
+                            <page string="Print Data" name="print_data">
+                                <group>
+                                    <field name="data" filename="print_data" 
+                                           invisible="not data"/>
+                                    <field name="template_data" widget="text" 
+                                           invisible="not template_data"/>
+                                </group>
+                            </page>
+                            <page string="Audit Trail" name="audit">
+                                <group>
+                                    <group>
+                                        <field name="create_uid" readonly="1"/>
+                                        <field name="create_date" readonly="1"/>
+                                    </group>
+                                    <group>
+                                        <field name="write_uid" readonly="1"/>
+                                        <field name="write_date" readonly="1"/>
+                                    </group>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Print Job Search View -->
+        <record id="view_qz_print_job_search" model="ir.ui.view">
+            <field name="name">qz.print.job.search</field>
+            <field name="model">qz.print.job</field>
+            <field name="arch" type="xml">
+                <search string="Search Print Jobs">
+                    <field name="name" string="Job Name" 
+                           filter_domain="['|', ('name', 'ilike', self), ('document_type', 'ilike', self)]"/>
+                    <field name="document_type"/>
+                    <field name="printer_id"/>
+                    <field name="user_id"/>
+                    
+                    <filter string="Draft" name="filter_draft" domain="[('state', '=', 'draft')]"/>
+                    <filter string="Queued" name="filter_queued" domain="[('state', '=', 'queued')]"/>
+                    <filter string="Printing" name="filter_printing" domain="[('state', '=', 'printing')]"/>
+                    <filter string="Completed" name="filter_completed" domain="[('state', '=', 'completed')]"/>
+                    <filter string="Failed" name="filter_failed" domain="[('state', '=', 'failed')]"/>
+                    <filter string="Cancelled" name="filter_cancelled" domain="[('state', '=', 'cancelled')]"/>
+                    <separator/>
+                    <filter string="Active Jobs" name="filter_active_jobs" domain="[('state', 'in', ['queued', 'printing'])]"/>
+                    <filter string="My Jobs" name="filter_my_jobs" domain="[('user_id', '=', uid)]"/>
+                    <separator/>
+                    <filter string="Today" name="filter_today" 
+                            domain="[('submitted_date', '&gt;=', datetime.datetime.combine(context_today(), datetime.time(0,0,0)))]"/>
+                    <filter string="Last 7 Days" name="filter_week" 
+                            domain="[('submitted_date', '&gt;=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                    <filter string="Last 30 Days" name="filter_month" 
+                            domain="[('submitted_date', '&gt;=', (context_today() - datetime.timedelta(days=30)).strftime('%Y-%m-%d'))]"/>
+                    
+                    <group expand="0" string="Group By">
+                        <filter string="Status" name="group_by_state" context="{'group_by': 'state'}"/>
+                        <filter string="Printer" name="group_by_printer" context="{'group_by': 'printer_id'}"/>
+                        <filter string="User" name="group_by_user" context="{'group_by': 'user_id'}"/>
+                        <filter string="Document Type" name="group_by_document_type" context="{'group_by': 'document_type'}"/>
+                        <filter string="Submitted Date" name="group_by_submitted_date" context="{'group_by': 'submitted_date:day'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Print Job Kanban View -->
+        <record id="view_qz_print_job_kanban" model="ir.ui.view">
+            <field name="name">qz.print.job.kanban</field>
+            <field name="model">qz.print.job</field>
+            <field name="arch" type="xml">
+                <kanban default_group_by="state" class="o_kanban_small_column">
+                    <field name="id"/>
+                    <field name="name"/>
+                    <field name="document_type"/>
+                    <field name="printer_id"/>
+                    <field name="user_id"/>
+                    <field name="state"/>
+                    <field name="submitted_date"/>
+                    <field name="priority"/>
+                    <field name="error_message"/>
+                    <templates>
+                        <t t-name="card">
+                            <div t-attf-class="oe_kanban_card oe_kanban_global_click 
+                                             {{record.state.raw_value == 'draft' ? 'oe_kanban_color_0' : ''}}
+                                             {{record.state.raw_value == 'queued' ? 'oe_kanban_color_3' : ''}}
+                                             {{record.state.raw_value == 'printing' ? 'oe_kanban_color_1' : ''}}
+                                             {{record.state.raw_value == 'completed' ? 'oe_kanban_color_10' : ''}}
+                                             {{record.state.raw_value == 'failed' ? 'oe_kanban_color_2' : ''}}
+                                             {{record.state.raw_value == 'cancelled' ? 'oe_kanban_color_8' : ''}}">
+                                <div class="o_kanban_record_top">
+                                    <div class="o_kanban_record_headings">
+                                        <strong class="o_kanban_record_title">
+                                            <field name="name"/>
+                                        </strong>
+                                        <div class="o_kanban_record_subtitle text-muted">
+                                            <field name="document_type"/>
+                                        </div>
+                                    </div>
+                                    <div class="o_kanban_record_top_right">
+                                        <field name="priority" widget="priority"/>
+                                    </div>
+                                </div>
+                                <div class="o_kanban_record_body">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <i class="fa fa-print" title="Printer"/> 
+                                            <field name="printer_id"/>
+                                        </div>
+                                        <div class="col-6">
+                                            <i class="fa fa-user" title="User"/> 
+                                            <field name="user_id"/>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-2">
+                                        <div class="col-12">
+                                            <i class="fa fa-clock-o" title="Submitted"/> 
+                                            <field name="submitted_date" widget="relative"/>
+                                        </div>
+                                    </div>
+                                    <div t-if="record.error_message.raw_value" class="row mt-2">
+                                        <div class="col-12 text-danger">
+                                            <i class="fa fa-exclamation-triangle"/> 
+                                            <t t-esc="record.error_message.value.substring(0, 50)"/>
+                                            <t t-if="record.error_message.value.length > 50">...</t>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="o_kanban_record_bottom">
+                                    <div class="oe_kanban_bottom_left">
+                                        <field name="state" widget="badge" 
+                                               decoration-info="state == 'queued'" 
+                                               decoration-primary="state == 'printing'" 
+                                               decoration-success="state == 'completed'" 
+                                               decoration-danger="state == 'failed'" 
+                                               decoration-muted="state == 'cancelled'"/>
+                                    </div>
+                                    <div class="oe_kanban_bottom_right">
+                                        <button name="cancel_job" 
+                                                type="object" 
+                                                class="btn btn-sm btn-warning" 
+                                                title="Cancel Job"
+                                                invisible="state not in ['queued', 'printing']">
+                                            <i class="fa fa-times"/>
+                                        </button>
+                                        <button name="retry_job" 
+                                                type="object" 
+                                                class="btn btn-sm btn-primary" 
+                                                title="Retry Job"
+                                                invisible="state != 'failed'">
+                                            <i class="fa fa-refresh"/>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+
+        <!-- Print Job Window Action -->
+        <record id="action_qz_print_job" model="ir.actions.act_window">
+            <field name="name">Print Jobs</field>
+            <field name="res_model">qz.print.job</field>
+            <field name="view_mode">list,form</field>
+            <field name="context">{'search_default_filter_my_jobs': 1, 'search_default_filter_week': 1}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No print jobs found
+                </p>
+                <p>
+                    Print jobs are created automatically when documents are sent to printers.
+                    You can monitor job status, retry failed jobs, and view print history here.
+                </p>
+            </field>
+        </record>
+
+        <!-- Print Queue Kanban Window Action -->
+        <record id="action_qz_print_queue" model="ir.actions.act_window">
+            <field name="name">Print Queue</field>
+            <field name="res_model">qz.print.job</field>
+            <field name="view_mode">kanban,list,form</field>
+            <field name="context">{'search_default_filter_active_jobs': 1}</field>
+            <field name="search_view_id" ref="view_qz_print_job_search"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No print jobs in queue
+                </p>
+                <p>
+                    The print queue shows active print jobs organized by status.
+                    You can monitor job progress, cancel pending jobs, and retry failed jobs.
+                </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>

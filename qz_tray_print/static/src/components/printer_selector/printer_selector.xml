@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="qz_tray_print.PrinterSelectorDialog">
+    <Dialog title="props.title or 'Select Printer'" size="'md'">
+        <div class="qz-printer-selector">
+            <div class="qz-printer-list">
+                <t t-if="props.printers.length === 0">
+                    <div class="alert alert-warning">
+                        <i class="fa fa-exclamation-triangle"/> No printers available
+                    </div>
+                </t>
+                <t t-else="">
+                    <div class="list-group">
+                        <t t-foreach="props.printers" t-as="printer" t-key="printer.id">
+                            <button 
+                                type="button"
+                                class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                                t-att-class="{ 'active': isSelected(printer) }"
+                                t-on-click="() => this.selectPrinter(printer)">
+                                <div class="d-flex flex-column">
+                                    <strong t-esc="printer.name"/>
+                                    <small class="text-muted">
+                                        <t t-if="printer.printer_type">
+                                            <span t-esc="printer.printer_type"/> - 
+                                        </t>
+                                        <t t-if="printer.system_name">
+                                            <span t-esc="printer.system_name"/>
+                                        </t>
+                                        <t t-if="printer.location_id">
+                                            - <span t-esc="printer.location_id[1]"/>
+                                        </t>
+                                    </small>
+                                </div>
+                                <t t-if="printer.is_default">
+                                    <span class="badge bg-primary">Default</span>
+                                </t>
+                            </button>
+                        </t>
+                    </div>
+                </t>
+            </div>
+        </div>
+        
+        <t t-set-slot="footer">
+            <button class="btn btn-secondary" t-on-click="cancel">
+                Cancel
+            </button>
+            <button 
+                class="btn btn-primary" 
+                t-on-click="confirm"
+                t-att-disabled="!state.selectedPrinter">
+                Confirm
+            </button>
+        </t>
+    </Dialog>
+</t>
+
+</templates>

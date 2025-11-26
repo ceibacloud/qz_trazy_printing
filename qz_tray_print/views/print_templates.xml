@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Default Receipt Template -->
+    <template id="receipt_template_default" name="Default Receipt Template">
+        <t t-name="qz_tray_print.receipt_default">
+            <div class="receipt-container" style="width: 80mm; font-family: monospace; font-size: 12px;">
+                <!-- Header -->
+                <div class="receipt-header" style="text-align: center; margin-bottom: 10px; border-bottom: 2px dashed #000; padding-bottom: 10px;">
+                    <t t-if="show_logo and company.logo">
+                        <img t-att-src="'data:image/png;base64,' + company.logo.decode('utf-8')" 
+                             style="max-width: 150px; margin-bottom: 10px;" 
+                             alt="Company Logo"/>
+                    </t>
+                    <h2 style="margin: 5px 0; font-size: 18px; font-weight: bold;">
+                        <t t-esc="company.name"/>
+                    </h2>
+                    <div style="font-size: 10px;">
+                        <t t-if="company.street"><t t-esc="company.street"/><br/></t>
+                        <t t-if="company.city"><t t-esc="company.city"/>, </t>
+                        <t t-if="company.state_id"><t t-esc="company.state_id.name"/> </t>
+                        <t t-if="company.zip"><t t-esc="company.zip"/></t>
+                    </div>
+                    <div style="font-size: 10px;" t-if="company.phone">
+                        Tel: <t t-esc="company.phone"/>
+                    </div>
+                </div>
+
+                <!-- Receipt Info -->
+                <div class="receipt-info" style="margin-bottom: 10px; font-size: 11px;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Receipt #:</span>
+                        <span><t t-esc="receipt.get('name', 'N/A')"/></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Date:</span>
+                        <span><t t-esc="date.strftime('%Y-%m-%d %H:%M') if date else 'N/A'"/></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Cashier:</span>
+                        <span><t t-esc="user.name"/></span>
+                    </div>
+                    <t t-if="customer">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Customer:</span>
+                            <span><t t-esc="customer.get('name', 'N/A')"/></span>
+                        </div>
+                    </t>
+                </div>
+
+                <!-- Items -->
+                <div class="receipt-items" style="border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 10px 0;">
+                    <t t-foreach="formatted_lines or []" t-as="line">
+                        <div class="receipt-item" style="margin-bottom: 8px;">
+                            <div style="display: flex; justify-content: space-between; font-weight: bold;">
+                                <span style="flex: 1;"><t t-esc="line['name']"/></span>
+                                <span style="text-align: right; min-width: 60px;">
+                                    <t t-esc="'%.2f' % line['price_subtotal']"/>
+                                </span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 10px; color: #666; margin-left: 10px;">
+                                <span>
+                                    <t t-esc="'%.2f' % line['quantity']"/> x 
+                                    <t t-esc="'%.2f' % line['price_unit']"/>
+                                </span>
+                                <span t-if="line['discount'] > 0">
+                                    Disc: <t t-esc="'%.1f' % line['discount']"/>%
+                                </span>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+
+                <!-- Totals -->
+                <div class="receipt-totals" style="margin-top: 10px; font-size: 11px;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Subtotal:</span>
+                        <span><t t-esc="'%.2f' % totals['subtotal']"/></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;" t-if="totals.get('discount', 0) > 0">
+                        <span>Discount:</span>
+                        <span>-<t t-esc="'%.2f' % totals['discount']"/></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;" t-if="totals.get('tax', 0) > 0">
+                        <span>Tax:</span>
+                        <span><t t-esc="'%.2f' % totals['tax']"/></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; margin-top: 5px; padding-top: 5px; border-top: 2px solid #000;">
+                        <span>TOTAL:</span>
+                        <span><t t-esc="'%.2f' % totals['total']"/></span>
+                    </div>
+                </div>
+
+                <!-- Payment Info -->
+                <div class="receipt-payment" style="margin-top: 10px; font-size: 11px; border-top: 1px dashed #000; padding-top: 10px;" t-if="payments">
+                    <t t-foreach="payments" t-as="payment">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span><t t-esc="payment.get('name', 'Payment')"/>:</span>
+                            <span><t t-esc="'%.2f' % payment.get('amount', 0.0)"/></span>
+                        </div>
+                    </t>
+                </div>
+
+                <!-- Footer -->
+                <div class="receipt-footer" style="text-align: center; margin-top: 15px; font-size: 10px; border-top: 2px dashed #000; padding-top: 10px;">
+                    <div style="margin-bottom: 5px;">
+                        Thank you for your business!
+                    </div>
+                    <t t-if="show_barcode and receipt.get('name')">
+                        <div style="margin: 10px 0; font-family: monospace;">
+                            <t t-esc="receipt.get('name')"/>
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Sample Receipt Template for POS -->
+    <template id="print_template_receipt_pos" name="POS Receipt Template">
+        <t t-name="qz_tray_print.receipt_pos">
+            <div class="receipt-container" style="width: 80mm; font-family: monospace; font-size: 12px;">
+                <!-- Header -->
+                <div class="receipt-header" style="text-align: center; margin-bottom: 10px; border-bottom: 2px dashed #000; padding-bottom: 10px;">
+                    <h2 style="margin: 5px 0; font-size: 18px; font-weight: bold;">
+                        <t t-esc="company_name or 'Company Name'"/>
+                    </h2>
+                    <div style="font-size: 10px;">
+                        <t t-esc="company_address or 'Company Address'"/>
+                    </div>
+                    <div style="font-size: 10px;">
+                        <t t-esc="company_phone or 'Phone Number'"/>
+                    </div>
+                </div>
+
+                <!-- Receipt Info -->
+                <div class="receipt-info" style="margin-bottom: 10px; font-size: 11px;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Receipt #:</span>
+                        <span><t t-esc="receipt_number or 'N/A'"/></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Date:</span>
+                        <span><t t-esc="receipt_date or 'N/A'"/></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Cashier:</span>
+                        <span><t t-esc="cashier_name or 'N/A'"/></span>
+                    </div>
+                </div>
+
+                <!-- Items -->
+                <div class="receipt-items" style="border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 10px 0;">
+                    <t t-foreach="items or []" t-as="item">
+                        <div class="receipt-item" style="margin-bottom: 8px;">
+                            <div style="display: flex; justify-content: space-between; font-weight: bold;">
+                                <span><t t-esc="item.get('name', 'Item')"/></span>
+                                <span><t t-esc="item.get('total', '0.00')"/></span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 10px; color: #666; margin-left: 10px;">
+                                <span>
+                                    <t t-esc="item.get('quantity', 1)"/> x 
+                                    <t t-esc="item.get('price', '0.00')"/>
+                                </span>
+                                <span t-if="item.get('discount', 0) > 0">
+                                    Disc: <t t-esc="item.get('discount', 0)"/>%
+                                </span>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+
+                <!-- Totals -->
+                <div class="receipt-totals" style="margin-top: 10px; font-size: 11px;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Subtotal:</span>
+                        <span><t t-esc="subtotal or '0.00'"/></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;" t-if="tax_amount">
+                        <span>Tax (<t t-esc="tax_rate or '0'"/>%):</span>
+                        <span><t t-esc="tax_amount or '0.00'"/></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;" t-if="discount_amount">
+                        <span>Discount:</span>
+                        <span>-<t t-esc="discount_amount or '0.00'"/></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; margin-top: 5px; padding-top: 5px; border-top: 2px solid #000;">
+                        <span>TOTAL:</span>
+                        <span><t t-esc="total or '0.00'"/></span>
+                    </div>
+                </div>
+
+                <!-- Payment Info -->
+                <div class="receipt-payment" style="margin-top: 10px; font-size: 11px; border-top: 1px dashed #000; padding-top: 10px;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Payment Method:</span>
+                        <span><t t-esc="payment_method or 'Cash'"/></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;" t-if="amount_paid">
+                        <span>Amount Paid:</span>
+                        <span><t t-esc="amount_paid or '0.00'"/></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;" t-if="change_amount">
+                        <span>Change:</span>
+                        <span><t t-esc="change_amount or '0.00'"/></span>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="receipt-footer" style="text-align: center; margin-top: 15px; font-size: 10px; border-top: 2px dashed #000; padding-top: 10px;">
+                    <div style="margin-bottom: 5px;">
+                        <t t-esc="footer_message or 'Thank you for your business!'"/>
+                    </div>
+                    <div t-if="barcode_value">
+                        <!-- Barcode placeholder - would be generated by barcode helper -->
+                        <div style="margin: 10px 0;">
+                            [Barcode: <t t-esc="barcode_value"/>]
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Sample Label Template for Inventory -->
+    <template id="print_template_label_product" name="Product Label Template">
+        <t t-name="qz_tray_print.label_product">
+            <div class="label-container" style="width: 4in; height: 6in; font-family: Arial, sans-serif; padding: 10px; border: 1px solid #000;">
+                <!-- Product Name -->
+                <div class="label-header" style="text-align: center; margin-bottom: 15px; border-bottom: 2px solid #000; padding-bottom: 10px;">
+                    <h1 style="margin: 0; font-size: 24px; font-weight: bold;">
+                        <t t-esc="product_name or 'Product Name'"/>
+                    </h1>
+                </div>
+
+                <!-- Product Details -->
+                <div class="label-details" style="margin-bottom: 15px; font-size: 14px;">
+                    <div style="margin-bottom: 8px;">
+                        <strong>SKU:</strong> <t t-esc="product_sku or 'N/A'"/>
+                    </div>
+                    <div style="margin-bottom: 8px;" t-if="product_category">
+                        <strong>Category:</strong> <t t-esc="product_category"/>
+                    </div>
+                    <div style="margin-bottom: 8px;" t-if="product_description">
+                        <strong>Description:</strong> <t t-esc="product_description"/>
+                    </div>
+                </div>
+
+                <!-- Barcode Section -->
+                <div class="label-barcode" style="text-align: center; margin: 20px 0; padding: 15px; background-color: #f5f5f5; border: 1px solid #ddd;">
+                    <div t-if="barcode_value">
+                        <!-- Barcode placeholder - would be generated by barcode helper -->
+                        <div style="font-size: 12px; margin-bottom: 5px;">
+                            [Barcode Image]
+                        </div>
+                        <div style="font-family: monospace; font-size: 16px; font-weight: bold;">
+                            <t t-esc="barcode_value"/>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Price and Stock Info -->
+                <div class="label-pricing" style="margin-top: 15px; border-top: 2px solid #000; padding-top: 10px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; margin-bottom: 10px;">
+                        <span>Price:</span>
+                        <span><t t-esc="product_price or '0.00'"/></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 14px;" t-if="stock_quantity">
+                        <span>Stock:</span>
+                        <span><t t-esc="stock_quantity"/> <t t-esc="stock_uom or 'units'"/></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 14px;" t-if="location">
+                        <span>Location:</span>
+                        <span><t t-esc="location"/></span>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="label-footer" style="text-align: center; margin-top: 15px; font-size: 10px; color: #666;">
+                    <div>Printed: <t t-esc="print_date or 'N/A'"/></div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Sample Invoice Template for Accounting -->
+    <template id="print_template_invoice" name="Invoice Template">
+        <t t-name="qz_tray_print.invoice">
+            <div class="invoice-container" style="width: 210mm; font-family: Arial, sans-serif; padding: 20mm;">
+                <!-- Invoice Header -->
+                <div class="invoice-header" style="display: flex; justify-content: space-between; margin-bottom: 30px; border-bottom: 3px solid #333; padding-bottom: 20px;">
+                    <div class="company-info" style="flex: 1;">
+                        <h1 style="margin: 0 0 10px 0; font-size: 28px; color: #333;">
+                            <t t-esc="company_name or 'Company Name'"/>
+                        </h1>
+                        <div style="font-size: 12px; line-height: 1.6;">
+                            <div><t t-esc="company_address or 'Company Address'"/></div>
+                            <div><t t-esc="company_city or 'City, State ZIP'"/></div>
+                            <div>Phone: <t t-esc="company_phone or 'Phone'"/></div>
+                            <div>Email: <t t-esc="company_email or 'Email'"/></div>
+                        </div>
+                    </div>
+                    <div class="invoice-info" style="text-align: right;">
+                        <h2 style="margin: 0 0 10px 0; font-size: 32px; color: #333;">INVOICE</h2>
+                        <div style="font-size: 14px; line-height: 1.8;">
+                            <div><strong>Invoice #:</strong> <t t-esc="invoice_number or 'N/A'"/></div>
+                            <div><strong>Date:</strong> <t t-esc="invoice_date or 'N/A'"/></div>
+                            <div><strong>Due Date:</strong> <t t-esc="due_date or 'N/A'"/></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Info -->
+                <div class="customer-info" style="margin-bottom: 30px; padding: 15px; background-color: #f9f9f9; border-left: 4px solid #333;">
+                    <h3 style="margin: 0 0 10px 0; font-size: 16px;">Bill To:</h3>
+                    <div style="font-size: 14px; line-height: 1.6;">
+                        <div style="font-weight: bold;"><t t-esc="customer_name or 'Customer Name'"/></div>
+                        <div><t t-esc="customer_address or 'Customer Address'"/></div>
+                        <div><t t-esc="customer_city or 'City, State ZIP'"/></div>
+                        <div t-if="customer_phone">Phone: <t t-esc="customer_phone"/></div>
+                        <div t-if="customer_email">Email: <t t-esc="customer_email"/></div>
+                    </div>
+                </div>
+
+                <!-- Invoice Items -->
+                <table class="invoice-items" style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+                    <thead>
+                        <tr style="background-color: #333; color: white;">
+                            <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Description</th>
+                            <th style="padding: 12px; text-align: center; border: 1px solid #ddd; width: 80px;">Qty</th>
+                            <th style="padding: 12px; text-align: right; border: 1px solid #ddd; width: 100px;">Unit Price</th>
+                            <th style="padding: 12px; text-align: right; border: 1px solid #ddd; width: 100px;">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="invoice_lines or []" t-as="line">
+                            <tr>
+                                <td style="padding: 10px; border: 1px solid #ddd;">
+                                    <div style="font-weight: bold;"><t t-esc="line.get('name', 'Item')"/></div>
+                                    <div style="font-size: 11px; color: #666;" t-if="line.get('description')">
+                                        <t t-esc="line.get('description')"/>
+                                    </div>
+                                </td>
+                                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">
+                                    <t t-esc="line.get('quantity', 1)"/>
+                                </td>
+                                <td style="padding: 10px; text-align: right; border: 1px solid #ddd;">
+                                    <t t-esc="line.get('unit_price', '0.00')"/>
+                                </td>
+                                <td style="padding: 10px; text-align: right; border: 1px solid #ddd; font-weight: bold;">
+                                    <t t-esc="line.get('amount', '0.00')"/>
+                                </td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+
+                <!-- Invoice Totals -->
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 30px;">
+                    <div style="width: 300px;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                                <td style="padding: 8px; text-align: right; font-size: 14px;">Subtotal:</td>
+                                <td style="padding: 8px; text-align: right; font-size: 14px; font-weight: bold;">
+                                    <t t-esc="subtotal or '0.00'"/>
+                                </td>
+                            </tr>
+                            <tr t-if="tax_amount">
+                                <td style="padding: 8px; text-align: right; font-size: 14px;">
+                                    Tax (<t t-esc="tax_rate or '0'"/>%):
+                                </td>
+                                <td style="padding: 8px; text-align: right; font-size: 14px; font-weight: bold;">
+                                    <t t-esc="tax_amount or '0.00'"/>
+                                </td>
+                            </tr>
+                            <tr t-if="discount_amount">
+                                <td style="padding: 8px; text-align: right; font-size: 14px;">Discount:</td>
+                                <td style="padding: 8px; text-align: right; font-size: 14px; font-weight: bold;">
+                                    -<t t-esc="discount_amount or '0.00'"/>
+                                </td>
+                            </tr>
+                            <tr style="background-color: #333; color: white;">
+                                <td style="padding: 12px; text-align: right; font-size: 16px; font-weight: bold;">
+                                    TOTAL:
+                                </td>
+                                <td style="padding: 12px; text-align: right; font-size: 16px; font-weight: bold;">
+                                    <t t-esc="total or '0.00'"/>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Payment Terms and Notes -->
+                <div class="invoice-footer" style="border-top: 2px solid #ddd; padding-top: 20px;">
+                    <div style="margin-bottom: 15px;" t-if="payment_terms">
+                        <h4 style="margin: 0 0 5px 0; font-size: 14px;">Payment Terms:</h4>
+                        <p style="margin: 0; font-size: 12px; color: #666;">
+                            <t t-esc="payment_terms"/>
+                        </p>
+                    </div>
+                    <div t-if="notes">
+                        <h4 style="margin: 0 0 5px 0; font-size: 14px;">Notes:</h4>
+                        <p style="margin: 0; font-size: 12px; color: #666;">
+                            <t t-esc="notes"/>
+                        </p>
+                    </div>
+                    <div style="text-align: center; margin-top: 30px; font-size: 11px; color: #999;">
+                        <t t-esc="footer_text or 'Thank you for your business!'"/>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+</odoo>

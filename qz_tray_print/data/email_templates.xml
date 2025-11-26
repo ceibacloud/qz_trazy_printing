@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- QZ Tray Print Job Failure Notification Email Template -->
+    <record id="email_template_print_job_failure" model="mail.template">
+        <field name="name">Print Job Failure Notification</field>
+        <field name="model_id" ref="model_qz_print_job"/>
+        <field name="subject">Print Job Failed: {{ object.name }}</field>
+        <field name="email_from">{{ (user.email_formatted or 'noreply@odoo.com') }}</field>
+        <field name="email_to">{{ object.user_id.email }}</field>
+        <field name="lang">{{ object.user_id.lang }}</field>
+        <field name="auto_delete" eval="True"/>
+        <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px;">
+    <div style="margin: 0px; padding: 0px; background-color: #f8f9fa;">
+        <div style="margin: 0px auto; max-width: 600px; padding: 20px;">
+            <!-- Header -->
+            <div style="background-color: #dc3545; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+                <h1 style="margin: 0; font-size: 24px;">Print Job Failed</h1>
+                <p style="margin: 5px 0 0 0; font-size: 16px;">Maximum retry attempts exceeded</p>
+            </div>
+            
+            <!-- Content -->
+            <div style="background-color: white; padding: 30px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <p>Dear <strong>Administrator</strong>,</p>
+                
+                <p>A print job has failed after reaching the maximum number of retry attempts. Please review the details below and take appropriate action.</p>
+                
+                <!-- Job Details -->
+                <div style="background-color: #f8f9fa; padding: 20px; border-radius: 6px; margin: 20px 0;">
+                    <h3 style="margin-top: 0; color: #dc3545;">Job Details</h3>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td style="padding: 8px 0; border-bottom: 1px solid #dee2e6;"><strong>Job Name:</strong></td>
+                            <td style="padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right;">{{ object.name }}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; border-bottom: 1px solid #dee2e6;"><strong>Document Type:</strong></td>
+                            <td style="padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right;">{{ object.document_type }}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; border-bottom: 1px solid #dee2e6;"><strong>Printer:</strong></td>
+                            <td style="padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right;">{{ object.printer_id.name }}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; border-bottom: 1px solid #dee2e6;"><strong>User:</strong></td>
+                            <td style="padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right;">{{ object.user_id.name }}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; border-bottom: 1px solid #dee2e6;"><strong>Submitted:</strong></td>
+                            <td style="padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right;">{{ format_datetime(object.submitted_date, tz=object.user_id.tz, dt_format='medium') }}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; border-bottom: 1px solid #dee2e6;"><strong>Retry Count:</strong></td>
+                            <td style="padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right;">{{ object.retry_count }}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0;"><strong>Status:</strong></td>
+                            <td style="padding: 8px 0; text-align: right; color: #dc3545;"><strong>Failed</strong></td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <!-- Error Details -->
+                <div style="background-color: #f8d7da; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #dc3545;">
+                    <h3 style="margin-top: 0; color: #721c24;">Error Message</h3>
+                    <p style="margin: 0; font-family: monospace; white-space: pre-wrap; word-wrap: break-word;">{{ object.error_message or 'No error message available' }}</p>
+                </div>
+                
+                <!-- Recommended Actions -->
+                <div style="background-color: #d1ecf1; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #17a2b8;">
+                    <h3 style="margin-top: 0; color: #0c5460;">Recommended Actions</h3>
+                    <ul style="margin: 0; padding-left: 20px;">
+                        <li>Check if the printer <strong>{{ object.printer_id.name }}</strong> is online and accessible</li>
+                        <li>Verify the printer configuration and connection settings</li>
+                        <li>Review the error message for specific issues</li>
+                        <li>Check QZ Tray is running on the client machine</li>
+                        <li>Manually resubmit the print job if the issue has been resolved</li>
+                    </ul>
+                </div>
+                
+                <!-- Access Link -->
+                <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #dee2e6;">
+                    <p>View the full job details in Odoo:</p>
+                    <a href="/web#id={{ object.id }}&amp;model=qz.print.job&amp;view_type=form" 
+                       style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; font-weight: bold;">
+                        View Print Job
+                    </a>
+                </div>
+                
+                <p style="margin-top: 30px;">This is an automated notification from the QZ Tray Print Integration module.</p>
+                <p>Best regards,<br/>{{ object.company_id.name or 'Odoo System' }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+        </field>
+    </record>
+</odoo>

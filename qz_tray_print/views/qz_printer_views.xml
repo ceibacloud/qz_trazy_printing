@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Printer Tree View -->
+        <record id="view_qz_printer_tree" model="ir.ui.view">
+            <field name="name">qz.printer.tree</field>
+            <field name="model">qz.printer</field>
+            <field name="arch" type="xml">
+                <list string="Printers">
+                    <header>
+                        <button name="get_available_printers" 
+                                type="object" 
+                                string="Discover Printers" 
+                                class="btn-primary"
+                                icon="fa-search"
+                                help="Discover printers from QZ Tray"/>
+                    </header>
+                    <field name="name"/>
+                    <field name="printer_type"/>
+                    <field name="system_name"/>
+                    <field name="location_id"/>
+                    <field name="department"/>
+                    <field name="is_default"/>
+                    <field name="priority"/>
+                    <field name="active"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Printer Form View -->
+        <record id="view_qz_printer_form" model="ir.ui.view">
+            <field name="name">qz.printer.form</field>
+            <field name="model">qz.printer</field>
+            <field name="arch" type="xml">
+                <form string="Printer Configuration">
+                    <header>
+                        <button name="test_print" 
+                                type="object" 
+                                string="Test Print" 
+                                class="btn-primary"
+                                icon="fa-print"
+                                help="Send a test page to this printer"/>
+                    </header>
+                    <sheet>
+                        <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                        
+                        <div class="oe_title">
+                            <label for="name" string="Printer Name"/>
+                            <h1>
+                                <field name="name" placeholder="e.g. Receipt Printer 01"/>
+                            </h1>
+                        </div>
+
+                        <group>
+                            <group string="Basic Information">
+                                <field name="printer_type" required="1"/>
+                                <field name="system_name" placeholder="System printer name from QZ Tray"/>
+                                <field name="active" widget="boolean_toggle"/>
+                            </group>
+                            <group string="Priority Settings">
+                                <field name="is_default" widget="boolean_toggle"/>
+                                <field name="priority"/>
+                            </group>
+                        </group>
+
+                        <group>
+                            <group string="Print Settings">
+                                <field name="paper_size"/>
+                                <field name="orientation"/>
+                                <field name="print_quality"/>
+                            </group>
+                            <group string="Supported Formats">
+                                <field name="supports_pdf" widget="boolean_toggle"/>
+                                <field name="supports_html" widget="boolean_toggle"/>
+                                <field name="supports_escpos" widget="boolean_toggle"/>
+                                <field name="supports_zpl" widget="boolean_toggle"/>
+                            </group>
+                        </group>
+
+                        <group>
+                            <group string="Location Assignment">
+                                <field name="location_id" placeholder="Assign to a specific location/company"/>
+                                <field name="department" placeholder="e.g. Sales, Warehouse, Kitchen"/>
+                            </group>
+                            <group string="Advanced">
+                                <field name="supported_formats"/>
+                            </group>
+                        </group>
+
+                        <notebook>
+                            <page string="Templates" name="templates">
+                                <field name="template_ids">
+                                    <list>
+                                        <field name="name"/>
+                                        <field name="category"/>
+                                        <field name="template_key"/>
+                                    </list>
+                                </field>
+                            </page>
+                            <page string="Audit Information" name="audit">
+                                <group>
+                                    <group>
+                                        <field name="create_uid" readonly="1"/>
+                                        <field name="create_date" readonly="1"/>
+                                    </group>
+                                    <group>
+                                        <field name="write_uid" readonly="1"/>
+                                        <field name="write_date" readonly="1"/>
+                                    </group>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Printer Search View -->
+        <record id="view_qz_printer_search" model="ir.ui.view">
+            <field name="name">qz.printer.search</field>
+            <field name="model">qz.printer</field>
+            <field name="arch" type="xml">
+                <search string="Search Printers">
+                    <field name="name" string="Printer Name" 
+                           filter_domain="['|', ('name', 'ilike', self), ('system_name', 'ilike', self)]"/>
+                    <field name="printer_type"/>
+                    <field name="location_id"/>
+                    <field name="department"/>
+                    
+                    <filter string="Active" name="filter_active" domain="[('active', '=', True)]"/>
+                    <filter string="Archived" name="filter_inactive" domain="[('active', '=', False)]"/>
+                    <separator/>
+                    <filter string="Default Printers" name="filter_default" domain="[('is_default', '=', True)]"/>
+                    <separator/>
+                    <filter string="Receipt Printers" name="filter_receipt" domain="[('printer_type', '=', 'receipt')]"/>
+                    <filter string="Label Printers" name="filter_label" domain="[('printer_type', '=', 'label')]"/>
+                    <filter string="Document Printers" name="filter_document" domain="[('printer_type', '=', 'document')]"/>
+                    <filter string="Other Printers" name="filter_other" domain="[('printer_type', '=', 'other')]"/>
+                    
+                    <group expand="0" string="Group By">
+                        <filter string="Printer Type" name="group_by_type" context="{'group_by': 'printer_type'}"/>
+                        <filter string="Location" name="group_by_location" context="{'group_by': 'location_id'}"/>
+                        <filter string="Status" name="group_by_active" context="{'group_by': 'active'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Printer Window Action -->
+        <record id="action_qz_printer" model="ir.actions.act_window">
+            <field name="name">Printers</field>
+            <field name="res_model">qz.printer</field>
+            <field name="view_mode">list,form</field>
+            <field name="context">{'search_default_filter_active': 1}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create your first printer configuration
+                </p>
+                <p>
+                    Configure printers to enable printing through QZ Tray.
+                    Click "Discover Printers" to automatically detect available printers.
+                </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>

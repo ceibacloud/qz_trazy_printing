@@ -1,0 +1,11 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_qz_tray_config_admin,qz.tray.config.admin,model_qz_tray_config,group_qz_print_admin,1,1,1,1
+access_qz_printer_user,qz.printer.user,model_qz_printer,group_qz_print_user,1,0,0,0
+access_qz_printer_manager,qz.printer.manager,model_qz_printer,group_qz_print_manager,1,1,1,0
+access_qz_printer_admin,qz.printer.admin,model_qz_printer,group_qz_print_admin,1,1,1,1
+access_qz_print_job_user,qz.print.job.user,model_qz_print_job,group_qz_print_user,1,1,1,0
+access_qz_print_job_manager,qz.print.job.manager,model_qz_print_job,group_qz_print_manager,1,1,1,1
+access_qz_print_job_admin,qz.print.job.admin,model_qz_print_job,group_qz_print_admin,1,1,1,1
+access_qz_print_template_user,qz.print.template.user,model_qz_print_template,group_qz_print_user,1,0,0,0
+access_qz_print_template_manager,qz.print.template.manager,model_qz_print_template,group_qz_print_manager,1,1,1,0
+access_qz_print_template_admin,qz.print.template.admin,model_qz_print_template,group_qz_print_admin,1,1,1,1

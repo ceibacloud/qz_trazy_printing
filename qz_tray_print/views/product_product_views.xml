@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inherit product form view to add print label button -->
+    <record id="product_product_form_view_inherit_qz_print" model="ir.ui.view">
+        <field name="name">product.product.form.inherit.qz.print</field>
+        <field name="model">product.product</field>
+        <field name="inherit_id" ref="product.product_normal_form_view"/>
+        <field name="arch" type="xml">
+            <!-- Add print label button in the header -->
+            <xpath expr="//header" position="inside">
+                <button name="action_print_label" 
+                        type="object" 
+                        string="Print Label" 
+                        class="btn-primary"
+                        icon="fa-print"
+                        help="Print a label for this product"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Inherit product tree view to add print labels action -->
+    <record id="product_product_tree_view_inherit_qz_print" model="ir.ui.view">
+        <field name="name">product.product.tree.inherit.qz.print</field>
+        <field name="model">product.product</field>
+        <field name="inherit_id" ref="product.product_product_tree_view"/>
+        <field name="arch" type="xml">
+            <!-- The action will be available in the Action menu for selected products -->
+            <xpath expr="//tree" position="attributes">
+                <attribute name="multi_edit">1</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Server action for batch printing labels from list view -->
+    <record id="action_print_labels_batch" model="ir.actions.server">
+        <field name="name">Print Labels (Batch)</field>
+        <field name="model_id" ref="product.model_product_product"/>
+        <field name="binding_model_id" ref="product.model_product_product"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+if records:
+    action = records.action_print_labels_batch()
+        </field>
+    </record>
+
+</odoo>
